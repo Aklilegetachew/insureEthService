@@ -1,0 +1,268 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CUSTOMER
+  SUPER_ADMIN
+  ADMIN
+  CLAIM_OFFICER
+  FINANCE_OFFICER
+  MANAGER
+  AGENT
+  ASSESSOR
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum QuotationStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+enum PolicyStatus {
+  PENDING_PAYMENT
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  SUSPENDED
+}
+
+enum PaymentMethod {
+  BANK_TRANSFER
+  TELEBIRR
+  CHAPA
+  CASH
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  FAILED
+  REFUNDED
+}
+
+enum ClaimStatus {
+  SUBMITTED
+  DOCUMENT_REVIEW
+  MORE_INFO_REQUIRED
+  ASSIGNED_TO_ASSESSOR
+  ASSESSMENT_COMPLETED
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  SETTLEMENT_PROCESSING
+  SETTLED
+  CLOSED
+}
+
+enum DocumentOwnerType {
+  CUSTOMER
+  QUOTATION
+  POLICY
+  CLAIM
+  PAYMENT
+}
+
+enum DocumentStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id              String           @id @default(uuid())
+  fullName        String
+  email           String           @unique
+  phone           String           @unique
+  passwordHash    String
+  role            UserRole
+  status          UserStatus       @default(ACTIVE)
+  lastLoginAt     DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  customerProfile CustomerProfile?
+  quotations      Quotation[]
+  policies        Policy[]
+  payments        Payment[]
+  claims          Claim[]
+  documents       Document[]       @relation("UploadedDocuments")
+
+  @@index([email])
+  @@index([phone])
+  @@index([role])
+  @@index([status])
+}
+
+model CustomerProfile {
+  id          String    @id @default(uuid())
+  userId      String    @unique
+  nationalId  String?   @unique
+  address     String?
+  dateOfBirth DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Document {
+  id               String            @id @default(uuid())
+  ownerType        DocumentOwnerType
+  ownerId          String
+  uploadedByUserId String
+  documentType     String
+  originalFileName String
+  storedFileName   String
+  mimeType         String
+  size             Int
+  fileUrl          String
+  status           DocumentStatus    @default(PENDING_REVIEW)
+  reviewNote       String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  uploadedBy       User              @relation("UploadedDocuments", fields: [uploadedByUserId], references: [id], onDelete: Cascade)
+
+  @@index([ownerType, ownerId])
+  @@index([uploadedByUserId])
+  @@index([status])
+}
+
+model InsuranceProduct {
+  id                  String        @id @default(uuid())
+  name                String
+  code                String        @unique
+  description         String?
+  category            String
+  status              ProductStatus @default(ACTIVE)
+  basePremium         Decimal?      @db.Decimal(12, 2)
+  premiumRate         Decimal?      @db.Decimal(8, 4)
+  coverageDescription String?
+  requiredDocuments   Json?
+  termsAndConditions  String?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  quotations          Quotation[]
+  policies            Policy[]
+
+  @@index([category])
+  @@index([status])
+  @@index([code])
+}
+
+model Quotation {
+  id                      String           @id @default(uuid())
+  quotationNumber         String           @unique
+  customerId              String
+  productId               String
+  status                  QuotationStatus  @default(SUBMITTED)
+  requestedCoverageAmount Decimal          @db.Decimal(14, 2)
+  calculatedPremium       Decimal          @db.Decimal(12, 2)
+  finalPremium            Decimal          @db.Decimal(12, 2)
+  customerInput           Json?
+  adminNote               String?
+  validUntil              DateTime?
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+  customer                User             @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  product                 InsuranceProduct @relation(fields: [productId], references: [id], onDelete: Restrict)
+  policy                  Policy?
+
+  @@index([customerId])
+  @@index([productId])
+  @@index([status])
+  @@index([quotationNumber])
+}
+
+model Policy {
+  id             String           @id @default(uuid())
+  policyNumber   String           @unique
+  customerId     String
+  productId      String
+  quotationId    String           @unique
+  status         PolicyStatus     @default(PENDING_PAYMENT)
+  coverageAmount Decimal          @db.Decimal(14, 2)
+  premiumAmount  Decimal          @db.Decimal(12, 2)
+  startDate      DateTime
+  endDate        DateTime
+  policyData     Json?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  customer       User             @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  product        InsuranceProduct @relation(fields: [productId], references: [id], onDelete: Restrict)
+  quotation      Quotation        @relation(fields: [quotationId], references: [id], onDelete: Restrict)
+  payments       Payment[]
+  claims         Claim[]
+
+  @@index([customerId])
+  @@index([productId])
+  @@index([status])
+  @@index([policyNumber])
+}
+
+model Claim {
+  id               String      @id @default(uuid())
+  claimNumber      String      @unique
+  customerId       String
+  policyId         String
+  claimType        String
+  incidentDate     DateTime
+  incidentLocation String
+  description      String
+  estimatedAmount  Decimal     @db.Decimal(12, 2)
+  approvedAmount   Decimal?    @db.Decimal(12, 2)
+  status           ClaimStatus @default(SUBMITTED)
+  rejectionReason  String?
+  adminNote        String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  customer         User        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  policy           Policy      @relation(fields: [policyId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+  @@index([policyId])
+  @@index([status])
+  @@index([claimNumber])
+}
+
+model Payment {
+  id                   String        @id @default(uuid())
+  paymentReference     String        @unique
+  customerId           String
+  policyId             String
+  amount               Decimal       @db.Decimal(12, 2)
+  method               PaymentMethod
+  status               PaymentStatus @default(PENDING)
+  proofUrl             String?
+  transactionReference String?
+  financeNote          String?
+  paidAt               DateTime?
+  verifiedAt           DateTime?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  customer             User          @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  policy               Policy        @relation(fields: [policyId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+  @@index([policyId])
+  @@index([status])
+  @@index([paymentReference])
+}
