@@ -1,0 +1,90 @@
+name: Build and deploy backend
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+concurrency:
+  group: backend-vps-deploy
+  cancel-in-progress: true
+
+env:
+  IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/insureeth-service
+  CONTAINER_NAME: insureeth-service
+  APP_DIR: /opt/insureeth-service
+  HOST_PORT: 5000
+  CONTAINER_PORT: 5000
+
+jobs:
+  docker:
+    name: Build, push, and deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:latest
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy on VPS
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          CONTAINER_NAME: ${{ env.CONTAINER_NAME }}
+          APP_DIR: ${{ env.APP_DIR }}
+          HOST_PORT: ${{ env.HOST_PORT }}
+          CONTAINER_PORT: ${{ env.CONTAINER_PORT }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          envs: IMAGE_NAME,CONTAINER_NAME,APP_DIR,HOST_PORT,CONTAINER_PORT,DOCKERHUB_USERNAME,DOCKERHUB_TOKEN
+          script: |
+            set -e
+
+            mkdir -p "$APP_DIR/uploads"
+
+            echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+            docker pull "$IMAGE_NAME:latest"
+
+            docker run --rm \
+              --env-file "$APP_DIR/.env" \
+              "$IMAGE_NAME:latest" \
+              npx prisma migrate deploy
+
+            docker stop "$CONTAINER_NAME" || true
+            docker rm "$CONTAINER_NAME" || true
+
+            docker run -d \
+              --name "$CONTAINER_NAME" \
+              --restart unless-stopped \
+              --env-file "$APP_DIR/.env" \
+              -p "$HOST_PORT:$CONTAINER_PORT" \
+              -v "$APP_DIR/uploads:/app/uploads" \
+              "$IMAGE_NAME:latest"
+
+            docker image prune -f
