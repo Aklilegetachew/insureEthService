@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: insurance-backend
+  labels:
+    app: insurance-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: insurance-backend
+  template:
+    metadata:
+      labels:
+        app: insurance-backend
+    spec:
+      imagePullSecrets:
+        - name: dockerhub-secret
+      containers:
+        - name: insurance-backend
+          image: aklile/insurebackend:v2
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000
+          envFrom:
+            - secretRef:
+                name: insurance-backend-env
