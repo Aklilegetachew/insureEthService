@@ -88,10 +88,10 @@ export class CustomerProfile {
   @Column({ unique: true })
   userId!: string;
 
-  @Column({ unique: true, nullable: true })
+  @Column({ type: 'varchar', unique: true, nullable: true })
   nationalId!: string | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   address!: string | null;
 
   @Column({ type: 'timestamp', nullable: true })
@@ -146,7 +146,7 @@ export class Document {
   @Column({ type: 'enum', enum: DocumentStatus, enumName: 'DocumentStatus', default: DocumentStatus.PENDING_REVIEW })
   status!: DocumentStatus;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   reviewNote!: string | null;
 
   @CreateDateColumn()
@@ -172,7 +172,7 @@ export class InsuranceProduct {
   @Column({ unique: true })
   code!: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   description!: string | null;
 
   @Index()
@@ -189,13 +189,13 @@ export class InsuranceProduct {
   @Column({ type: 'decimal', precision: 8, scale: 4, nullable: true })
   premiumRate!: string | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   coverageDescription!: string | null;
 
   @Column({ type: 'jsonb', nullable: true })
   requiredDocuments!: unknown;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   termsAndConditions!: string | null;
 
   @CreateDateColumn()
@@ -244,7 +244,7 @@ export class Quotation {
   @Column({ type: 'jsonb', nullable: true })
   customerInput!: unknown;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   adminNote!: string | null;
 
   @Column({ type: 'timestamp', nullable: true })
@@ -371,10 +371,10 @@ export class Claim {
   @Column({ type: 'enum', enum: ClaimStatus, enumName: 'ClaimStatus', default: ClaimStatus.SUBMITTED })
   status!: ClaimStatus;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   rejectionReason!: string | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   adminNote!: string | null;
 
   @CreateDateColumn()
@@ -419,13 +419,13 @@ export class Payment {
   @Column({ type: 'enum', enum: PaymentStatus, enumName: 'PaymentStatus', default: PaymentStatus.PENDING })
   status!: PaymentStatus;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   proofUrl!: string | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   transactionReference!: string | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   financeNote!: string | null;
 
   @Column({ type: 'timestamp', nullable: true })
