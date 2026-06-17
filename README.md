@@ -24,9 +24,10 @@ Node.js, Express, TypeScript, PostgreSQL, TypeORM, JWT, and Zod backend foundati
 
 3. Update `.env` with your PostgreSQL connection string and a secure JWT secret.
 
-4. If you are preparing a fresh development database, synchronize the TypeORM schema:
+4. Build the project, then synchronize the TypeORM schema if you are preparing a fresh database:
 
    ```bash
+   npm run build
    npm run db:schema:sync
    ```
 
@@ -42,7 +43,7 @@ Node.js, Express, TypeScript, PostgreSQL, TypeORM, JWT, and Zod backend foundati
 - `npm run build` compiles TypeScript into `dist`.
 - `npm run start` runs the root `server.js` launcher, which imports `dist/server.js`.
 - `npm run typecheck` checks TypeScript without emitting files.
-- `npm run db:schema:sync` synchronizes the TypeORM entity schema for a fresh development database.
+- `npm run db:schema:sync` synchronizes the compiled TypeORM entity schema for a fresh database.
 
 ## API
 

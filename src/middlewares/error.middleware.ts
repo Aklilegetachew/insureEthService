@@ -13,6 +13,10 @@ type HttpError = Error & {
 const isProduction = process.env.NODE_ENV === 'production';
 
 export const errorMiddleware: ErrorRequestHandler = (error: HttpError, _req, res, _next) => {
+  if (error.statusCode === undefined && error.status === undefined) {
+    console.error('Unhandled request error:', error);
+  }
+
   if (error instanceof ZodError) {
     res.status(400).json(
       ApiResponse.error({
