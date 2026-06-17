@@ -1,4 +1,4 @@
-import { Prisma, QuotationStatus, UserRole } from '@prisma/client';
+import { Orm, QuotationStatus, UserRole } from '#database';
 
 import { AppError } from '../../utils/app-error.js';
 import type { SafeUser } from '../auth/auth.types.js';
@@ -14,8 +14,8 @@ const isStaff = (user: SafeUser) => user.role !== UserRole.CUSTOMER;
 const calculatePremium = (
   requestedCoverageAmount: number,
   product: {
-    basePremium: Prisma.Decimal | null;
-    premiumRate: Prisma.Decimal | null;
+    basePremium: Orm.Decimal | null;
+    premiumRate: Orm.Decimal | null;
   },
 ) => {
   if (product.premiumRate !== null) {
@@ -41,8 +41,8 @@ const assertReviewable = (status: QuotationStatus) => {
   }
 };
 
-const handlePrismaError = (error: unknown): never => {
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+const handleormError = (error: unknown): never => {
+  if (error instanceof Orm.KnownRequestError) {
     if (error.code === 'P2025') {
       throw new AppError('Quotation not found', 404);
     }
@@ -70,7 +70,7 @@ export const quotationService = {
     try {
       return await quotationRepository.create(user.id, input, calculatedPremium);
     } catch (error) {
-      handlePrismaError(error);
+      handleormError(error);
     }
   },
 
@@ -115,7 +115,7 @@ export const quotationService = {
     try {
       return await quotationRepository.approve(quotationId, input);
     } catch (error) {
-      handlePrismaError(error);
+      handleormError(error);
     }
   },
 
@@ -135,7 +135,7 @@ export const quotationService = {
     try {
       return await quotationRepository.reject(quotationId, input);
     } catch (error) {
-      handlePrismaError(error);
+      handleormError(error);
     }
   },
 };

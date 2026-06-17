@@ -1,4 +1,4 @@
-import { PaymentMethod, PaymentStatus } from '@prisma/client';
+import { PaymentMethod, PaymentStatus } from '#database';
 import { z } from 'zod';
 
 export const createPaymentSchema = z.object({

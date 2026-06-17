@@ -1,6 +1,6 @@
-import { Prisma, ProductStatus, QuotationStatus } from '@prisma/client';
+import { Orm, ProductStatus, QuotationStatus } from '#database';
 
-import { prisma } from '../../config/prisma.js';
+import { orm } from '../../config/orm.js';
 import type {
   CreateQuotationInput,
   QuotationDecisionInput,
@@ -36,7 +36,7 @@ const formatQuotationNumber = (year: number, sequence: number) =>
 
 export const quotationRepository = {
   findActiveProductById(productId: string) {
-    return prisma.insuranceProduct.findFirst({
+    return orm.insuranceProduct.findFirst({
       where: {
         id: productId,
         status: ProductStatus.ACTIVE,
@@ -59,7 +59,7 @@ export const quotationRepository = {
     const yearStart = new Date(Date.UTC(year, 0, 1));
     const nextYearStart = new Date(Date.UTC(year + 1, 0, 1));
 
-    return prisma.$transaction(async (tx) => {
+    return orm.$transaction(async (tx) => {
       const sequence = await tx.quotation.count({
         where: {
           createdAt: {
@@ -75,9 +75,9 @@ export const quotationRepository = {
           customerId,
           productId: input.productId,
           status: QuotationStatus.SUBMITTED,
-          requestedCoverageAmount: new Prisma.Decimal(input.requestedCoverageAmount),
-          calculatedPremium: new Prisma.Decimal(calculatedPremium),
-          finalPremium: new Prisma.Decimal(calculatedPremium),
+          requestedCoverageAmount: new Orm.Decimal(input.requestedCoverageAmount),
+          calculatedPremium: new Orm.Decimal(calculatedPremium),
+          finalPremium: new Orm.Decimal(calculatedPremium),
           ...(input.customerInput !== undefined ? { customerInput: input.customerInput } : {}),
           ...(input.validUntil ? { validUntil: new Date(input.validUntil) } : {}),
         },
@@ -87,7 +87,7 @@ export const quotationRepository = {
   },
 
   findMine(customerId: string) {
-    return prisma.quotation.findMany({
+    return orm.quotation.findMany({
       where: { customerId },
       include: quotationInclude,
       orderBy: { createdAt: 'desc' },
@@ -95,21 +95,21 @@ export const quotationRepository = {
   },
 
   findByIdForCustomer(id: string, customerId: string) {
-    return prisma.quotation.findFirst({
+    return orm.quotation.findFirst({
       where: { id, customerId },
       include: quotationInclude,
     });
   },
 
   findById(id: string) {
-    return prisma.quotation.findUnique({
+    return orm.quotation.findUnique({
       where: { id },
       include: quotationInclude,
     });
   },
 
   findMany(query: QuotationQuery) {
-    return prisma.quotation.findMany({
+    return orm.quotation.findMany({
       where: {
         ...(query.status ? { status: query.status } : {}),
         ...(query.customerId ? { customerId: query.customerId } : {}),
@@ -138,13 +138,13 @@ export const quotationRepository = {
   },
 
   approve(id: string, input: QuotationDecisionInput) {
-    return prisma.quotation.update({
+    return orm.quotation.update({
       where: { id },
       data: {
         status: QuotationStatus.APPROVED,
         ...(input.adminNote !== undefined ? { adminNote: input.adminNote } : {}),
         ...(input.finalPremium !== undefined
-          ? { finalPremium: new Prisma.Decimal(input.finalPremium) }
+          ? { finalPremium: new Orm.Decimal(input.finalPremium) }
           : {}),
       },
       include: quotationInclude,
@@ -152,7 +152,7 @@ export const quotationRepository = {
   },
 
   reject(id: string, input: QuotationDecisionInput) {
-    return prisma.quotation.update({
+    return orm.quotation.update({
       where: { id },
       data: {
         status: QuotationStatus.REJECTED,

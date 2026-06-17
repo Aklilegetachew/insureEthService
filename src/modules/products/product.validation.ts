@@ -1,4 +1,4 @@
-import { ProductStatus } from '@prisma/client';
+import { ProductStatus } from '#database';
 import { z } from 'zod';
 
 const optionalPositiveNumber = z.coerce.number().positive().optional();

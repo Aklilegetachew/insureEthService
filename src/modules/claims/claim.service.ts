@@ -1,4 +1,4 @@
-import { Prisma, UserRole } from '@prisma/client';
+import { Orm, UserRole } from '#database';
 
 import { AppError } from '../../utils/app-error.js';
 import type { SafeUser } from '../auth/auth.types.js';
@@ -25,8 +25,8 @@ const assertStaff = (user: SafeUser) => {
   }
 };
 
-const handlePrismaError = (error: unknown): never => {
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+const handleormError = (error: unknown): never => {
+  if (error instanceof Orm.KnownRequestError) {
     if (error.code === 'P2025') {
       throw new AppError('Claim not found', 404);
     }
@@ -52,7 +52,7 @@ export const claimService = {
     try {
       return await claimRepository.create(user.id, input);
     } catch (error) {
-      handlePrismaError(error);
+      handleormError(error);
     }
   },
 
@@ -96,7 +96,7 @@ export const claimService = {
     try {
       return await claimRepository.updateStatus(claimId, input);
     } catch (error) {
-      handlePrismaError(error);
+      handleormError(error);
     }
   },
 
@@ -106,7 +106,7 @@ export const claimService = {
     try {
       return await claimRepository.approve(claimId, input);
     } catch (error) {
-      handlePrismaError(error);
+      handleormError(error);
     }
   },
 
@@ -116,7 +116,7 @@ export const claimService = {
     try {
       return await claimRepository.reject(claimId, input);
     } catch (error) {
-      handlePrismaError(error);
+      handleormError(error);
     }
   },
 };

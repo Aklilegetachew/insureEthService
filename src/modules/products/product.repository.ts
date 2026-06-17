@@ -1,6 +1,6 @@
-import { ProductStatus, Prisma } from '@prisma/client';
+import { ProductStatus, Orm } from '#database';
 
-import { prisma } from '../../config/prisma.js';
+import { orm } from '../../config/orm.js';
 import type { CreateProductInput, ProductQuery, UpdateProductInput } from './product.types.js';
 
 const productSelect = {
@@ -25,8 +25,8 @@ const toProductData = (input: CreateProductInput | UpdateProductInput) => ({
   ...(input.description !== undefined ? { description: input.description } : {}),
   ...(input.category !== undefined ? { category: input.category } : {}),
   ...(input.status !== undefined ? { status: input.status } : {}),
-  ...(input.basePremium !== undefined ? { basePremium: new Prisma.Decimal(input.basePremium) } : {}),
-  ...(input.premiumRate !== undefined ? { premiumRate: new Prisma.Decimal(input.premiumRate) } : {}),
+  ...(input.basePremium !== undefined ? { basePremium: new Orm.Decimal(input.basePremium) } : {}),
+  ...(input.premiumRate !== undefined ? { premiumRate: new Orm.Decimal(input.premiumRate) } : {}),
   ...(input.coverageDescription !== undefined
     ? { coverageDescription: input.coverageDescription }
     : {}),
@@ -40,7 +40,7 @@ const toProductData = (input: CreateProductInput | UpdateProductInput) => ({
 
 export const productRepository = {
   findMany(query: ProductQuery, activeOnly: boolean) {
-    const where: Prisma.InsuranceProductWhereInput = {
+    const where: Orm.InsuranceProductWhereInput = {
       ...(activeOnly ? { status: ProductStatus.ACTIVE } : {}),
       ...(!activeOnly && query.status ? { status: query.status } : {}),
       ...(query.category ? { category: { equals: query.category, mode: 'insensitive' } } : {}),
@@ -55,7 +55,7 @@ export const productRepository = {
         : {}),
     };
 
-    return prisma.insuranceProduct.findMany({
+    return orm.insuranceProduct.findMany({
       where,
       select: productSelect,
       orderBy: { createdAt: 'desc' },
@@ -63,7 +63,7 @@ export const productRepository = {
   },
 
   findById(id: string, activeOnly: boolean) {
-    return prisma.insuranceProduct.findFirst({
+    return orm.insuranceProduct.findFirst({
       where: {
         id,
         ...(activeOnly ? { status: ProductStatus.ACTIVE } : {}),
@@ -73,29 +73,29 @@ export const productRepository = {
   },
 
   findByCode(code: string) {
-    return prisma.insuranceProduct.findUnique({
+    return orm.insuranceProduct.findUnique({
       where: { code },
       select: { id: true, code: true },
     });
   },
 
   create(input: CreateProductInput) {
-    return prisma.insuranceProduct.create({
-      data: toProductData(input) as Prisma.InsuranceProductCreateInput,
+    return orm.insuranceProduct.create({
+      data: toProductData(input) as Orm.InsuranceProductCreateInput,
       select: productSelect,
     });
   },
 
   update(id: string, input: UpdateProductInput) {
-    return prisma.insuranceProduct.update({
+    return orm.insuranceProduct.update({
       where: { id },
-      data: toProductData(input) as Prisma.InsuranceProductUpdateInput,
+      data: toProductData(input) as Orm.InsuranceProductUpdateInput,
       select: productSelect,
     });
   },
 
   delete(id: string) {
-    return prisma.insuranceProduct.delete({
+    return orm.insuranceProduct.delete({
       where: { id },
       select: productSelect,
     });

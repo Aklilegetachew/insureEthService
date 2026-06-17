@@ -1,4 +1,4 @@
-import type { DocumentOwnerType } from '@prisma/client';
+import type { DocumentOwnerType } from '#database';
 
 export type CreateDocumentInput = {
   ownerType: DocumentOwnerType;

@@ -1,6 +1,6 @@
-import { DocumentOwnerType, DocumentStatus } from '@prisma/client';
+import { DocumentOwnerType, DocumentStatus } from '#database';
 
-import { prisma } from '../../config/prisma.js';
+import { orm } from '../../config/orm.js';
 import type { CreateDocumentInput, DocumentReviewInput } from './document.types.js';
 
 const documentInclude = {
@@ -23,7 +23,7 @@ export const documentRepository = {
     ownerType?: DocumentOwnerType;
     documentType?: string;
   }) {
-    return prisma.document.findMany({
+    return orm.document.findMany({
       where: {
         ...(filters.status ? { status: filters.status } : {}),
         ...(filters.ownerType ? { ownerType: filters.ownerType } : {}),
@@ -81,7 +81,7 @@ export const documentRepository = {
   },
 
   create(uploadedByUserId: string, input: CreateDocumentInput) {
-    return prisma.document.create({
+    return orm.document.create({
       data: {
         ...input,
         uploadedByUserId,
@@ -92,14 +92,14 @@ export const documentRepository = {
   },
 
   findById(id: string) {
-    return prisma.document.findUnique({
+    return orm.document.findUnique({
       where: { id },
       include: documentInclude,
     });
   },
 
   findByOwner(ownerType: DocumentOwnerType, ownerId: string) {
-    return prisma.document.findMany({
+    return orm.document.findMany({
       where: { ownerType, ownerId },
       include: documentInclude,
       orderBy: { createdAt: 'desc' },
@@ -107,7 +107,7 @@ export const documentRepository = {
   },
 
   approve(id: string, input: DocumentReviewInput) {
-    return prisma.document.update({
+    return orm.document.update({
       where: { id },
       data: {
         status: DocumentStatus.APPROVED,
@@ -118,7 +118,7 @@ export const documentRepository = {
   },
 
   reject(id: string, input: DocumentReviewInput) {
-    return prisma.document.update({
+    return orm.document.update({
       where: { id },
       data: {
         status: DocumentStatus.REJECTED,
@@ -129,35 +129,35 @@ export const documentRepository = {
   },
 
   findCustomerOwner(ownerId: string) {
-    return prisma.customerProfile.findFirst({
+    return orm.customerProfile.findFirst({
       where: { OR: [{ id: ownerId }, { userId: ownerId }] },
       select: { id: true, userId: true },
     });
   },
 
   findQuotationOwner(ownerId: string) {
-    return prisma.quotation.findUnique({
+    return orm.quotation.findUnique({
       where: { id: ownerId },
       select: { id: true, customerId: true },
     });
   },
 
   findPolicyOwner(ownerId: string) {
-    return prisma.policy.findUnique({
+    return orm.policy.findUnique({
       where: { id: ownerId },
       select: { id: true, customerId: true },
     });
   },
 
   findClaimOwner(ownerId: string) {
-    return prisma.claim.findUnique({
+    return orm.claim.findUnique({
       where: { id: ownerId },
       select: { id: true, customerId: true },
     });
   },
 
   findPaymentOwner(ownerId: string) {
-    return prisma.payment.findUnique({
+    return orm.payment.findUnique({
       where: { id: ownerId },
       select: { id: true, customerId: true },
     });

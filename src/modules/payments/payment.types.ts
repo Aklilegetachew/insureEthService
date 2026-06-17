@@ -1,4 +1,4 @@
-import type { PaymentMethod, PaymentStatus } from '@prisma/client';
+import type { PaymentMethod, PaymentStatus } from '#database';
 
 export type CreatePaymentInput = {
   policyId: string;

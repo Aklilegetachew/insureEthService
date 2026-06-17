@@ -1,6 +1,6 @@
-import { UserRole, UserStatus } from '@prisma/client';
+import { UserRole, UserStatus } from '#database';
 
-import { prisma } from '../../../config/prisma.js';
+import { orm } from '../../../config/orm.js';
 import type { StaffInput, StaffQuery, UpdateStaffInput } from './staff.types.js';
 
 const staffSelect = {
@@ -13,17 +13,6 @@ const staffSelect = {
   lastLoginAt: true,
   createdAt: true,
   updatedAt: true,
-} as const;
-
-const staffInclude = {
-  customerProfile: {
-    select: {
-      id: true,
-      nationalId: true,
-      address: true,
-      dateOfBirth: true,
-    },
-  },
 } as const;
 
 const staffWhere = (query: StaffQuery) => ({
@@ -45,7 +34,7 @@ const staffWhere = (query: StaffQuery) => ({
 
 export const staffRepository = {
   findMany(query: StaffQuery) {
-    return prisma.user.findMany({
+    return orm.user.findMany({
       where: staffWhere(query),
       select: staffSelect,
       orderBy: { createdAt: 'desc' },
@@ -53,7 +42,7 @@ export const staffRepository = {
   },
 
   findById(id: string) {
-    return prisma.user.findFirst({
+    return orm.user.findFirst({
       where: {
         id,
         role: {
@@ -68,7 +57,7 @@ export const staffRepository = {
   },
 
   create(input: StaffInput, passwordHash: string) {
-    return prisma.user.create({
+    return orm.user.create({
       data: {
         fullName: input.fullName,
         email: input.email,
@@ -82,7 +71,7 @@ export const staffRepository = {
   },
 
   update(id: string, input: UpdateStaffInput, passwordHash?: string) {
-    return prisma.user.update({
+    return orm.user.update({
       where: { id },
       data: {
         ...(input.fullName ? { fullName: input.fullName } : {}),
@@ -97,7 +86,7 @@ export const staffRepository = {
   },
 
   updateStatus(id: string, status: UserStatus) {
-    return prisma.user.update({
+    return orm.user.update({
       where: { id },
       data: { status },
       select: staffSelect,

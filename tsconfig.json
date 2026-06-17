@@ -3,6 +3,7 @@
     "target": "ES2022",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    "ignoreDeprecations": "6.0",
     "rootDir": "src",
     "outDir": "dist",
     "strict": true,
@@ -10,6 +11,14 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "#database": [
+        "./src/config/database.ts"
+      ]
+    },
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "sourceMap": true,
     "declaration": true,
     "noUncheckedIndexedAccess": true,

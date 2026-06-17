@@ -1,10 +1,10 @@
-import { ClaimStatus, PaymentStatus, PolicyStatus, Prisma } from '@prisma/client';
+import { ClaimStatus, PaymentStatus, PolicyStatus, Orm } from '#database';
 import dayjs from 'dayjs';
 
-import { prisma } from '../../../config/prisma.js';
+import { orm } from '../../../config/orm.js';
 import type { ReportFilters } from './reports.types.js';
 
-const toAmount = (value: Prisma.Decimal | null | undefined) => Number(value ?? 0);
+const toAmount = (value: Orm.Decimal | null | undefined) => Number(value ?? 0);
 
 const getDateRangeStart = (dateRange?: string) => {
   const now = dayjs();
@@ -103,9 +103,9 @@ export const reportsService = {
       claims,
       policies,
     ] = await Promise.all([
-      prisma.user.count({ where: { role: 'CUSTOMER' } }),
-      prisma.policy.count({ where: { status: PolicyStatus.ACTIVE, ...policyWhere } }),
-      prisma.claim.count({
+      orm.user.count({ where: { role: 'CUSTOMER' } }),
+      orm.policy.count({ where: { status: PolicyStatus.ACTIVE, ...policyWhere } }),
+      orm.claim.count({
         where: {
           ...claimWhere,
           status: {
@@ -121,8 +121,8 @@ export const reportsService = {
           },
         },
       }),
-      prisma.payment.count({ where: { status: PaymentStatus.PENDING, ...paymentWhere } }),
-      prisma.payment.aggregate({
+      orm.payment.count({ where: { status: PaymentStatus.PENDING, ...paymentWhere } }),
+      orm.payment.aggregate({
         where: {
           status: PaymentStatus.VERIFIED,
           ...paymentWhere,
@@ -131,7 +131,7 @@ export const reportsService = {
           amount: true,
         },
       }),
-      prisma.claim.aggregate({
+      orm.claim.aggregate({
         where: {
           ...claimWhere,
           status: {
@@ -142,33 +142,33 @@ export const reportsService = {
           approvedAmount: true,
         },
       }),
-      prisma.quotation.count({
+      orm.quotation.count({
         where: {
           ...quotationWhere,
           status: 'SUBMITTED',
         },
       }),
-      prisma.document.count({
+      orm.document.count({
         where: {
           status: 'PENDING_REVIEW',
           ...(since ? { createdAt: { gte: since } } : {}),
         },
       }),
-      prisma.payment.findMany({
+      orm.payment.findMany({
         where: paymentWhere,
         select: {
           createdAt: true,
           amount: true,
         },
       }),
-      prisma.claim.findMany({
+      orm.claim.findMany({
         where: claimWhere,
         select: {
           status: true,
           estimatedAmount: true,
         },
       }),
-      prisma.policy.findMany({
+      orm.policy.findMany({
         where: policyWhere,
         select: {
           productId: true,
@@ -193,7 +193,7 @@ export const reportsService = {
       policyProductMap.set(policy.productId, (policyProductMap.get(policy.productId) ?? 0) + 1);
     });
 
-    const paymentMethodAgg = await prisma.payment.groupBy({
+    const paymentMethodAgg = await orm.payment.groupBy({
       by: ['method'],
       where: paymentWhere,
       _count: {
@@ -201,7 +201,7 @@ export const reportsService = {
       },
     });
 
-    const productRows = await prisma.insuranceProduct.findMany({
+    const productRows = await orm.insuranceProduct.findMany({
       ...(filters?.productId ? { where: { id: filters.productId } } : {}),
       select: {
         id: true,
@@ -212,7 +212,7 @@ export const reportsService = {
 
     const productLabelMap = new Map(productRows.map((product) => [product.id, product.name]));
 
-    const recentClaims = await prisma.claim.findMany({
+    const recentClaims = await orm.claim.findMany({
       where: claimWhere,
       include: {
         customer: {
@@ -232,7 +232,7 @@ export const reportsService = {
       take: 10,
     });
 
-    const recentPayments = await prisma.payment.findMany({
+    const recentPayments = await orm.payment.findMany({
       where: paymentWhere,
       include: {
         customer: {
@@ -252,7 +252,7 @@ export const reportsService = {
       take: 10,
     });
 
-    const expiringPolicies = await prisma.policy.findMany({
+    const expiringPolicies = await orm.policy.findMany({
       where: {
         status: PolicyStatus.ACTIVE,
         endDate: {
@@ -348,7 +348,7 @@ export const reportsService = {
 
   async listPolicies(filters?: ReportFilters) {
     const policyWhere = getPolicyWhere(filters);
-    const rows = await prisma.policy.findMany({
+    const rows = await orm.policy.findMany({
       where: policyWhere,
       include: {
         customer: {
@@ -383,7 +383,7 @@ export const reportsService = {
 
   async listClaims(filters?: ReportFilters) {
     const claimWhere = getClaimWhere(filters);
-    const rows = await prisma.claim.findMany({
+    const rows = await orm.claim.findMany({
       where: claimWhere,
       include: {
         customer: {
@@ -416,7 +416,7 @@ export const reportsService = {
 
   async listPayments(filters?: ReportFilters) {
     const paymentWhere = getPaymentWhere(filters);
-    const rows = await prisma.payment.findMany({
+    const rows = await orm.payment.findMany({
       where: paymentWhere,
       include: {
         customer: {

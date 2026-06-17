@@ -1,4 +1,4 @@
-import { Prisma, UserRole } from '@prisma/client';
+import { Orm, UserRole } from '#database';
 
 import { AppError } from '../../utils/app-error.js';
 import type { SafeUser } from '../auth/auth.types.js';
@@ -23,8 +23,8 @@ const assertStaff = (user: SafeUser) => {
   }
 };
 
-const handlePrismaError = (error: unknown): never => {
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+const handleormError = (error: unknown): never => {
+  if (error instanceof Orm.KnownRequestError) {
     if (error.code === 'P2025') {
       throw new AppError('Policy not found', 404);
     }
@@ -82,7 +82,7 @@ export const policyService = {
     try {
       return await policyRepository.createFromQuotation(quotation, input);
     } catch (error) {
-      handlePrismaError(error);
+      handleormError(error);
     }
   },
 
@@ -96,7 +96,7 @@ export const policyService = {
     try {
       return await policyRepository.updateStatus(policyId, input);
     } catch (error) {
-      handlePrismaError(error);
+      handleormError(error);
     }
   },
 };

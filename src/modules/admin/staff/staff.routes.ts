@@ -1,4 +1,4 @@
-import { UserRole } from '@prisma/client';
+import { UserRole } from '#database';
 import { Router } from 'express';
 
 import { authenticate } from '../../../middlewares/auth.middleware.js';

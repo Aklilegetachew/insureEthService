@@ -1,10 +1,10 @@
-import type { DocumentOwnerType } from '@prisma/client';
+import type { DocumentOwnerType } from '#database';
 
 import { ApiResponse } from '../../utils/api-response.js';
 import { AppError } from '../../utils/app-error.js';
 import { asyncHandler } from '../../utils/async-handler.js';
 import { documentService } from './document.service.js';
-import type { DocumentStatus } from '@prisma/client';
+import type { DocumentStatus } from '#database';
 
 const requireUser = (user: Express.Request['user']) => {
   if (!user) {

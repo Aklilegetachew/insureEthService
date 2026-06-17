@@ -1,10 +1,10 @@
-import { Prisma } from '@prisma/client';
+import { Orm } from '#database';
 
 import { AppError } from '../../../utils/app-error.js';
 import { customerRepository } from './customer.repository.js';
 import type { CustomerQuery } from './customer.types.js';
 
-const toAmount = (value: Prisma.Decimal | null | undefined) => Number(value ?? 0);
+const toAmount = (value: Orm.Decimal | null | undefined) => Number(value ?? 0);
 
 const flattenCustomer = (customer: Awaited<ReturnType<typeof customerRepository.findById>>) => {
   if (!customer) return null;

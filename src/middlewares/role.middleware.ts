@@ -1,4 +1,4 @@
-import type { UserRole } from '@prisma/client';
+import type { UserRole } from '#database';
 
 import { AppError } from '../utils/app-error.js';
 import { asyncHandler } from '../utils/async-handler.js';

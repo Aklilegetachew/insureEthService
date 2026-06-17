@@ -1,4 +1,4 @@
-import { UserRole, UserStatus } from '@prisma/client';
+import { UserRole, UserStatus } from '#database';
 import { z } from 'zod';
 
 const staffRoles = [

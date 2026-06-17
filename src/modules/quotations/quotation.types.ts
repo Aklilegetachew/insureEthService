@@ -1,9 +1,9 @@
-import type { Prisma, QuotationStatus } from '@prisma/client';
+import type { Orm, QuotationStatus } from '#database';
 
 export type CreateQuotationInput = {
   productId: string;
   requestedCoverageAmount: number;
-  customerInput?: Prisma.InputJsonValue;
+  customerInput?: Orm.InputJsonValue;
   validUntil?: string;
 };
 

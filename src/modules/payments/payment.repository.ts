@@ -1,6 +1,6 @@
-import { PaymentStatus, PolicyStatus, Prisma } from '@prisma/client';
+import { PaymentStatus, PolicyStatus, Orm } from '#database';
 
-import { prisma } from '../../config/prisma.js';
+import { orm } from '../../config/orm.js';
 import type {
   CreatePaymentInput,
   PaymentDecisionInput,
@@ -42,7 +42,7 @@ const formatPaymentReference = (year: number, sequence: number) =>
 
 export const paymentRepository = {
   findPolicyForCustomer(policyId: string, customerId: string) {
-    return prisma.policy.findFirst({
+    return orm.policy.findFirst({
       where: {
         id: policyId,
         customerId,
@@ -61,7 +61,7 @@ export const paymentRepository = {
     const yearStart = new Date(Date.UTC(year, 0, 1));
     const nextYearStart = new Date(Date.UTC(year + 1, 0, 1));
 
-    return prisma.$transaction(async (tx) => {
+    return orm.$transaction(async (tx) => {
       const sequence = await tx.payment.count({
         where: {
           createdAt: {
@@ -76,7 +76,7 @@ export const paymentRepository = {
           paymentReference: formatPaymentReference(year, sequence + 1),
           customerId,
           policyId: input.policyId,
-          amount: new Prisma.Decimal(input.amount),
+          amount: new Orm.Decimal(input.amount),
           method: input.method,
           status: PaymentStatus.PENDING,
           ...(input.proofUrl !== undefined ? { proofUrl: input.proofUrl } : {}),
@@ -91,7 +91,7 @@ export const paymentRepository = {
   },
 
   findMine(customerId: string) {
-    return prisma.payment.findMany({
+    return orm.payment.findMany({
       where: { customerId },
       include: paymentInclude,
       orderBy: { createdAt: 'desc' },
@@ -99,14 +99,14 @@ export const paymentRepository = {
   },
 
   findById(id: string) {
-    return prisma.payment.findUnique({
+    return orm.payment.findUnique({
       where: { id },
       include: paymentInclude,
     });
   },
 
   findMany(query: PaymentQuery) {
-    return prisma.payment.findMany({
+    return orm.payment.findMany({
       where: {
         ...(query.status ? { status: query.status } : {}),
         ...(query.method ? { method: query.method } : {}),
@@ -142,7 +142,7 @@ export const paymentRepository = {
   },
 
   verify(id: string, input: PaymentDecisionInput) {
-    return prisma.$transaction(async (tx) => {
+    return orm.$transaction(async (tx) => {
       const payment = await tx.payment.update({
         where: { id },
         data: {
@@ -165,7 +165,7 @@ export const paymentRepository = {
   },
 
   reject(id: string, input: PaymentDecisionInput) {
-    return prisma.payment.update({
+    return orm.payment.update({
       where: { id },
       data: {
         status: PaymentStatus.REJECTED,

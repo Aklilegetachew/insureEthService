@@ -1,4 +1,4 @@
-import { QuotationStatus } from '@prisma/client';
+import { QuotationStatus } from '#database';
 import { z } from 'zod';
 
 const optionalPositiveNumber = z.coerce.number().positive().optional();

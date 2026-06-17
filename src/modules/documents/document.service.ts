@@ -1,6 +1,6 @@
-import { DocumentOwnerType, Prisma, UserRole, type DocumentStatus } from '@prisma/client';
+import { DocumentOwnerType, Orm, UserRole, type DocumentStatus } from '#database';
 
-import { prisma } from '../../config/prisma.js';
+import { orm } from '../../config/orm.js';
 import { AppError } from '../../utils/app-error.js';
 import type { SafeUser } from '../auth/auth.types.js';
 import { documentRepository } from './document.repository.js';
@@ -8,8 +8,8 @@ import type { CreateDocumentInput, DocumentReviewInput } from './document.types.
 
 const isStaff = (user: SafeUser) => user.role !== UserRole.CUSTOMER;
 
-const handlePrismaError = (error: unknown): never => {
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+const handleormError = (error: unknown): never => {
+  if (error instanceof Orm.KnownRequestError) {
     if (error.code === 'P2025') {
       throw new AppError('Document not found', 404);
     }
@@ -69,14 +69,14 @@ const resolveOwnerLabel = async (document: Awaited<ReturnType<typeof documentRep
       const owner = await documentRepository.findCustomerOwner(document.ownerId);
       if (!owner) return null;
 
-      const customer = await prisma.user.findUnique({
+      const customer = await orm.user.findUnique({
         where: { id: owner.userId },
         select: { fullName: true, email: true },
       });
       return customer?.fullName ?? customer?.email ?? owner.userId;
     }
     case DocumentOwnerType.QUOTATION: {
-      const quotation = await prisma.quotation.findUnique({
+      const quotation = await orm.quotation.findUnique({
         where: { id: document.ownerId },
         select: {
           quotationNumber: true,
@@ -88,7 +88,7 @@ const resolveOwnerLabel = async (document: Awaited<ReturnType<typeof documentRep
       return quotation?.quotationNumber ?? quotation?.customer.fullName ?? document.ownerId;
     }
     case DocumentOwnerType.POLICY: {
-      const policy = await prisma.policy.findUnique({
+      const policy = await orm.policy.findUnique({
         where: { id: document.ownerId },
         select: {
           policyNumber: true,
@@ -100,7 +100,7 @@ const resolveOwnerLabel = async (document: Awaited<ReturnType<typeof documentRep
       return policy?.policyNumber ?? policy?.customer.fullName ?? document.ownerId;
     }
     case DocumentOwnerType.CLAIM: {
-      const claim = await prisma.claim.findUnique({
+      const claim = await orm.claim.findUnique({
         where: { id: document.ownerId },
         select: {
           claimNumber: true,
@@ -112,7 +112,7 @@ const resolveOwnerLabel = async (document: Awaited<ReturnType<typeof documentRep
       return claim?.claimNumber ?? claim?.customer.fullName ?? document.ownerId;
     }
     case DocumentOwnerType.PAYMENT: {
-      const payment = await prisma.payment.findUnique({
+      const payment = await orm.payment.findUnique({
         where: { id: document.ownerId },
         select: {
           paymentReference: true,
@@ -135,7 +135,7 @@ export const documentService = {
     try {
       return await documentRepository.create(user.id, input);
     } catch (error) {
-      handlePrismaError(error);
+      handleormError(error);
     }
   },
 
@@ -167,7 +167,7 @@ export const documentService = {
     try {
       return await documentRepository.approve(documentId, input);
     } catch (error) {
-      handlePrismaError(error);
+      handleormError(error);
     }
   },
 
@@ -179,7 +179,7 @@ export const documentService = {
     try {
       return await documentRepository.reject(documentId, input);
     } catch (error) {
-      handlePrismaError(error);
+      handleormError(error);
     }
   },
 

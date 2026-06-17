@@ -1,4 +1,4 @@
-import type { UserStatus } from '@prisma/client';
+import type { UserStatus } from '#database';
 
 export type CustomerQuery = {
   search?: string;

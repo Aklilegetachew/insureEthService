@@ -1,4 +1,4 @@
-import { ClaimStatus } from '@prisma/client';
+import { ClaimStatus } from '#database';
 import { z } from 'zod';
 
 export const createClaimSchema = z.object({

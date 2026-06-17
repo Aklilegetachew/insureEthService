@@ -1,6 +1,6 @@
-import { DocumentOwnerType, PaymentStatus, UserRole } from '@prisma/client';
+import { DocumentOwnerType, PaymentStatus, UserRole } from '#database';
 
-import { prisma } from '../../../config/prisma.js';
+import { orm } from '../../../config/orm.js';
 import type { CustomerQuery } from './customer.types.js';
 
 const customerSelect = {
@@ -49,7 +49,7 @@ const customerWhere = (query: CustomerQuery) => ({
 
 export const customerRepository = {
   findMany(query: CustomerQuery) {
-    return prisma.user.findMany({
+    return orm.user.findMany({
       where: customerWhere(query),
       select: customerSelect,
       orderBy: { createdAt: 'desc' },
@@ -57,7 +57,7 @@ export const customerRepository = {
   },
 
   findById(id: string) {
-    return prisma.user.findFirst({
+    return orm.user.findFirst({
       where: {
         id,
         role: UserRole.CUSTOMER,
@@ -67,7 +67,7 @@ export const customerRepository = {
   },
 
   findPolicies(customerId: string) {
-    return prisma.policy.findMany({
+    return orm.policy.findMany({
       where: { customerId },
       include: {
         product: {
@@ -92,7 +92,7 @@ export const customerRepository = {
   },
 
   findClaims(customerId: string) {
-    return prisma.claim.findMany({
+    return orm.claim.findMany({
       where: { customerId },
       include: {
         policy: {
@@ -116,7 +116,7 @@ export const customerRepository = {
   },
 
   findPayments(customerId: string) {
-    return prisma.payment.findMany({
+    return orm.payment.findMany({
       where: { customerId },
       include: {
         policy: {
@@ -141,7 +141,7 @@ export const customerRepository = {
   },
 
   findDocuments(customerId: string, profileId?: string | null) {
-    return prisma.document.findMany({
+    return orm.document.findMany({
       where: {
         ownerType: DocumentOwnerType.CUSTOMER,
         OR: [
@@ -166,7 +166,7 @@ export const customerRepository = {
   },
 
   sumVerifiedPayments(customerIds: string[]) {
-    return prisma.payment.groupBy({
+    return orm.payment.groupBy({
       by: ['customerId'],
       where: {
         customerId: { in: customerIds },

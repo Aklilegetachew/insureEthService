@@ -1,4 +1,4 @@
-import { DocumentOwnerType } from '@prisma/client';
+import { DocumentOwnerType } from '#database';
 import { z } from 'zod';
 
 const documentStatusSchema = z.enum(['PENDING_REVIEW', 'APPROVED', 'REJECTED']);

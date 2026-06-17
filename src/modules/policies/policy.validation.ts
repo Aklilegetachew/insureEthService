@@ -1,4 +1,4 @@
-import { PolicyStatus } from '@prisma/client';
+import { PolicyStatus } from '#database';
 import { z } from 'zod';
 
 const policyDataSchema = z.record(z.string(), z.unknown()).optional();

@@ -1,4 +1,4 @@
-import { PaymentStatus, Prisma, UserRole } from '@prisma/client';
+import { PaymentStatus, Orm, UserRole } from '#database';
 
 import { AppError } from '../../utils/app-error.js';
 import type { SafeUser } from '../auth/auth.types.js';
@@ -29,8 +29,8 @@ const assertPending = (status: PaymentStatus) => {
   }
 };
 
-const handlePrismaError = (error: unknown): never => {
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+const handleormError = (error: unknown): never => {
+  if (error instanceof Orm.KnownRequestError) {
     if (error.code === 'P2025') {
       throw new AppError('Payment not found', 404);
     }
@@ -53,14 +53,14 @@ export const paymentService = {
       throw new AppError('Policy not found', 404);
     }
 
-    if (!new Prisma.Decimal(input.amount).equals(policy.premiumAmount)) {
+    if (!new Orm.Decimal(input.amount).equals(policy.premiumAmount)) {
       throw new AppError('Payment amount must match the policy premium amount', 422);
     }
 
     try {
       return await paymentRepository.create(user.id, input);
     } catch (error) {
-      handlePrismaError(error);
+      handleormError(error);
     }
   },
 
@@ -88,7 +88,7 @@ export const paymentService = {
     try {
       return await paymentRepository.verify(paymentId, input);
     } catch (error) {
-      handlePrismaError(error);
+      handleormError(error);
     }
   },
 
@@ -106,7 +106,7 @@ export const paymentService = {
     try {
       return await paymentRepository.reject(paymentId, input);
     } catch (error) {
-      handlePrismaError(error);
+      handleormError(error);
     }
   },
 };

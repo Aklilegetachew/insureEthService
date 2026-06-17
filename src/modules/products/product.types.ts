@@ -1,4 +1,4 @@
-import type { Prisma, ProductStatus } from '@prisma/client';
+import type { Orm, ProductStatus } from '#database';
 
 export type ProductQuery = {
   status?: ProductStatus;
@@ -15,7 +15,7 @@ export type CreateProductInput = {
   basePremium?: number;
   premiumRate?: number;
   coverageDescription?: string;
-  requiredDocuments?: Prisma.InputJsonValue;
+  requiredDocuments?: Orm.InputJsonValue;
   termsAndConditions?: string;
 };
 

@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { Prisma, UserRole, UserStatus } from '@prisma/client';
+import { Orm, UserRole, UserStatus } from '#database';
 
 import { AppError } from '../../../utils/app-error.js';
 import type { SafeUser } from '../../auth/auth.types.js';
@@ -24,8 +24,8 @@ const assertSuperAdmin = (user: SafeUser) => {
   }
 };
 
-const handlePrismaError = (error: unknown): never => {
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+const handleormError = (error: unknown): never => {
+  if (error instanceof Orm.KnownRequestError) {
     if (error.code === 'P2025') {
       throw new AppError('Staff member not found', 404);
     }
@@ -73,7 +73,7 @@ export const staffService = {
       const staff = await staffRepository.create(input, passwordHash);
       return enrichStaff(staff);
     } catch (error) {
-      handlePrismaError(error);
+      handleormError(error);
     }
   },
 
@@ -88,7 +88,7 @@ export const staffService = {
       const staff = await staffRepository.update(staffId, input, passwordHash);
       return enrichStaff(staff);
     } catch (error) {
-      handlePrismaError(error);
+      handleormError(error);
     }
   },
 
@@ -99,7 +99,7 @@ export const staffService = {
       const staff = await staffRepository.updateStatus(staffId, status);
       return enrichStaff(staff);
     } catch (error) {
-      handlePrismaError(error);
+      handleormError(error);
     }
   },
 
@@ -116,7 +116,7 @@ export const staffService = {
         temporaryPassword: nextPassword,
       };
     } catch (error) {
-      handlePrismaError(error);
+      handleormError(error);
     }
   },
 };

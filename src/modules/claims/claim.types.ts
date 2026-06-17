@@ -1,4 +1,4 @@
-import type { ClaimStatus } from '@prisma/client';
+import type { ClaimStatus } from '#database';
 
 export type CreateClaimInput = {
   policyId: string;

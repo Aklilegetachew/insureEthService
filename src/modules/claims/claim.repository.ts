@@ -1,6 +1,6 @@
-import { ClaimStatus, PolicyStatus, Prisma } from '@prisma/client';
+import { ClaimStatus, PolicyStatus, Orm } from '#database';
 
-import { prisma } from '../../config/prisma.js';
+import { orm } from '../../config/orm.js';
 import type {
   ApproveClaimInput,
   ClaimQuery,
@@ -44,7 +44,7 @@ const formatClaimNumber = (year: number, sequence: number) =>
 
 export const claimRepository = {
   findActivePolicyForCustomer(policyId: string, customerId: string) {
-    return prisma.policy.findFirst({
+    return orm.policy.findFirst({
       where: {
         id: policyId,
         customerId,
@@ -63,7 +63,7 @@ export const claimRepository = {
     const yearStart = new Date(Date.UTC(year, 0, 1));
     const nextYearStart = new Date(Date.UTC(year + 1, 0, 1));
 
-    return prisma.$transaction(async (tx) => {
+    return orm.$transaction(async (tx) => {
       const sequence = await tx.claim.count({
         where: {
           createdAt: {
@@ -82,7 +82,7 @@ export const claimRepository = {
           incidentDate: new Date(input.incidentDate),
           incidentLocation: input.incidentLocation,
           description: input.description,
-          estimatedAmount: new Prisma.Decimal(input.estimatedAmount),
+          estimatedAmount: new Orm.Decimal(input.estimatedAmount),
           status: ClaimStatus.SUBMITTED,
         },
         include: claimInclude,
@@ -91,7 +91,7 @@ export const claimRepository = {
   },
 
   findMine(customerId: string) {
-    return prisma.claim.findMany({
+    return orm.claim.findMany({
       where: { customerId },
       include: claimInclude,
       orderBy: { createdAt: 'desc' },
@@ -99,21 +99,21 @@ export const claimRepository = {
   },
 
   findByIdForCustomer(id: string, customerId: string) {
-    return prisma.claim.findFirst({
+    return orm.claim.findFirst({
       where: { id, customerId },
       include: claimInclude,
     });
   },
 
   findById(id: string) {
-    return prisma.claim.findUnique({
+    return orm.claim.findUnique({
       where: { id },
       include: claimInclude,
     });
   },
 
   findMany(query: ClaimQuery) {
-    return prisma.claim.findMany({
+    return orm.claim.findMany({
       where: {
         ...(query.status ? { status: query.status } : {}),
         ...(query.customerId ? { customerId: query.customerId } : {}),
@@ -143,7 +143,7 @@ export const claimRepository = {
   },
 
   updateStatus(id: string, input: UpdateClaimStatusInput) {
-    return prisma.claim.update({
+    return orm.claim.update({
       where: { id },
       data: {
         status: input.status,
@@ -154,11 +154,11 @@ export const claimRepository = {
   },
 
   approve(id: string, input: ApproveClaimInput) {
-    return prisma.claim.update({
+    return orm.claim.update({
       where: { id },
       data: {
         status: ClaimStatus.APPROVED,
-        approvedAmount: new Prisma.Decimal(input.approvedAmount),
+        approvedAmount: new Orm.Decimal(input.approvedAmount),
         ...(input.adminNote !== undefined ? { adminNote: input.adminNote } : {}),
         rejectionReason: null,
       },
@@ -167,7 +167,7 @@ export const claimRepository = {
   },
 
   reject(id: string, input: RejectClaimInput) {
-    return prisma.claim.update({
+    return orm.claim.update({
       where: { id },
       data: {
         status: ClaimStatus.REJECTED,

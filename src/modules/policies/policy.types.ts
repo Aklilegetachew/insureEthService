@@ -1,8 +1,8 @@
-import type { PolicyStatus, Prisma } from '@prisma/client';
+import type { PolicyStatus, Orm } from '#database';
 
 export type CreatePolicyFromQuotationInput = {
   startDate?: string;
-  policyData?: Prisma.InputJsonValue;
+  policyData?: Orm.InputJsonValue;
 };
 
 export type UpdatePolicyStatusInput = {

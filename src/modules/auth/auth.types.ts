@@ -1,4 +1,4 @@
-import type { CustomerProfile, User } from '@prisma/client';
+import type { CustomerProfileModel as CustomerProfile, UserModel as User } from '#database';
 
 export type SafeUser = Omit<User, 'passwordHash'>;
 

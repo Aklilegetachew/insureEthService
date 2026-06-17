@@ -1,4 +1,4 @@
-import { Prisma, UserRole } from '@prisma/client';
+import { Orm, UserRole } from '#database';
 
 import { AppError } from '../../utils/app-error.js';
 import type { SafeUser } from '../auth/auth.types.js';
@@ -9,8 +9,8 @@ const canViewAllProducts = (user?: SafeUser) => Boolean(user && user.role !== Us
 
 const getActiveOnly = (user?: SafeUser) => !canViewAllProducts(user);
 
-const handlePrismaError = (error: unknown): never => {
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+const handleormError = (error: unknown): never => {
+  if (error instanceof Orm.KnownRequestError) {
     if (error.code === 'P2002') {
       throw new AppError('Product code already exists', 409);
     }
@@ -48,7 +48,7 @@ export const productService = {
     try {
       return await productRepository.create(input);
     } catch (error) {
-      handlePrismaError(error);
+      handleormError(error);
     }
   },
 
@@ -56,7 +56,7 @@ export const productService = {
     try {
       return await productRepository.update(id, input);
     } catch (error) {
-      handlePrismaError(error);
+      handleormError(error);
     }
   },
 
@@ -64,7 +64,7 @@ export const productService = {
     try {
       return await productRepository.delete(id);
     } catch (error) {
-      handlePrismaError(error);
+      handleormError(error);
     }
   },
 };

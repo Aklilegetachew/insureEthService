@@ -1,6 +1,6 @@
-import { PolicyStatus, Prisma, QuotationStatus } from '@prisma/client';
+import { PolicyStatus, Orm, QuotationStatus } from '#database';
 
-import { prisma } from '../../config/prisma.js';
+import { orm } from '../../config/orm.js';
 import type {
   CreatePolicyFromQuotationInput,
   PolicyQuery,
@@ -49,12 +49,12 @@ const addOneYear = (date: Date) => {
 };
 
 type ApprovedQuotation = NonNullable<
-  Awaited<ReturnType<typeof prisma.quotation.findFirst>>
+  Awaited<ReturnType<typeof orm.quotation.findFirst>>
 >;
 
 export const policyRepository = {
   findApprovedQuotationById(quotationId: string) {
-    return prisma.quotation.findFirst({
+    return orm.quotation.findFirst({
       where: {
         id: quotationId,
         status: QuotationStatus.APPROVED,
@@ -76,7 +76,7 @@ export const policyRepository = {
   },
 
   findByQuotationId(quotationId: string) {
-    return prisma.policy.findUnique({
+    return orm.policy.findUnique({
       where: { quotationId },
       include: policyInclude,
     });
@@ -92,7 +92,7 @@ export const policyRepository = {
     const yearStart = new Date(Date.UTC(year, 0, 1));
     const nextYearStart = new Date(Date.UTC(year + 1, 0, 1));
 
-    return prisma.$transaction(async (tx) => {
+    return orm.$transaction(async (tx) => {
       const sequence = await tx.policy.count({
         where: {
           createdAt: {
@@ -118,7 +118,7 @@ export const policyRepository = {
             ({
               quotationNumber: quotation.quotationNumber,
               customerInput: quotation.customerInput,
-            } as Prisma.InputJsonValue),
+            } as Orm.InputJsonValue),
         },
         include: policyInclude,
       });
@@ -126,7 +126,7 @@ export const policyRepository = {
   },
 
   findMine(customerId: string) {
-    return prisma.policy.findMany({
+    return orm.policy.findMany({
       where: { customerId },
       include: policyInclude,
       orderBy: { createdAt: 'desc' },
@@ -134,14 +134,14 @@ export const policyRepository = {
   },
 
   findByIdForCustomer(id: string, customerId: string) {
-    return prisma.policy.findFirst({
+    return orm.policy.findFirst({
       where: { id, customerId },
       include: policyInclude,
     });
   },
 
   findMany(query: PolicyQuery) {
-    return prisma.policy.findMany({
+    return orm.policy.findMany({
       where: {
         ...(query.status ? { status: query.status } : {}),
         ...(query.customerId ? { customerId: query.customerId } : {}),
@@ -175,7 +175,7 @@ export const policyRepository = {
   },
 
   updateStatus(id: string, input: UpdatePolicyStatusInput) {
-    return prisma.policy.update({
+    return orm.policy.update({
       where: { id },
       data: {
         status: input.status,

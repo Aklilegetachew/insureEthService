@@ -1,6 +1,6 @@
 # Insurance Platform Backend
 
-Initial Node.js, Express, TypeScript, PostgreSQL, Prisma, JWT, and Zod backend foundation for the insurance digital platform.
+Node.js, Express, TypeScript, PostgreSQL, TypeORM, JWT, and Zod backend foundation for the insurance digital platform.
 
 ## Prerequisites
 
@@ -24,10 +24,10 @@ Initial Node.js, Express, TypeScript, PostgreSQL, Prisma, JWT, and Zod backend f
 
 3. Update `.env` with your PostgreSQL connection string and a secure JWT secret.
 
-4. Generate the Prisma client after adding a Prisma schema:
+4. If you are preparing a fresh development database, synchronize the TypeORM schema:
 
    ```bash
-   npm run db:generate
+   npm run db:schema:sync
    ```
 
 5. Start the development server:
@@ -42,8 +42,7 @@ Initial Node.js, Express, TypeScript, PostgreSQL, Prisma, JWT, and Zod backend f
 - `npm run build` compiles TypeScript into `dist`.
 - `npm run start` runs the compiled server.
 - `npm run typecheck` checks TypeScript without emitting files.
-- `npm run db:generate` generates Prisma client types.
-- `npm run db:migrate` runs Prisma migrations in development.
+- `npm run db:schema:sync` synchronizes the TypeORM entity schema for a fresh development database.
 
 ## API
 
@@ -190,7 +189,12 @@ src/
   server.ts
   config/
     env.ts
-    prisma.ts
+    database.ts
+    orm.ts
+  database/
+    entities.ts
+    enums.ts
+    schema-sync.ts
   middlewares/
     auth.middleware.ts
     error.middleware.ts

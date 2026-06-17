@@ -1,6 +1,6 @@
-import { UserRole, UserStatus } from '@prisma/client';
+import { UserRole, UserStatus } from '#database';
 
-import { prisma } from '../../config/prisma.js';
+import { orm } from '../../config/orm.js';
 import type { RegisterCustomerInput } from './auth.types.js';
 
 const userSelect = {
@@ -22,7 +22,7 @@ const userWithPasswordSelect = {
 
 export const authRepository = {
   findByEmailOrPhone(identifier: string) {
-    return prisma.user.findFirst({
+    return orm.user.findFirst({
       where: {
         OR: [{ email: identifier.toLowerCase() }, { phone: identifier }],
       },
@@ -31,7 +31,7 @@ export const authRepository = {
   },
 
   findExistingCustomer(email: string, phone: string, nationalId?: string) {
-    return prisma.user.findFirst({
+    return orm.user.findFirst({
       where: {
         OR: [
           { email },
@@ -67,7 +67,7 @@ export const authRepository = {
       ...(input.dateOfBirth ? { dateOfBirth: new Date(input.dateOfBirth) } : {}),
     };
 
-    return prisma.user.create({
+    return orm.user.create({
       data: {
         fullName: input.fullName,
         email: input.email,
@@ -87,7 +87,7 @@ export const authRepository = {
   },
 
   findActiveUserById(id: string) {
-    return prisma.user.findFirst({
+    return orm.user.findFirst({
       where: {
         id,
         status: UserStatus.ACTIVE,
@@ -97,7 +97,7 @@ export const authRepository = {
   },
 
   findUserWithProfileById(id: string) {
-    return prisma.user.findUnique({
+    return orm.user.findUnique({
       where: { id },
       select: {
         ...userSelect,
@@ -107,7 +107,7 @@ export const authRepository = {
   },
 
   touchLastLogin(id: string) {
-    return prisma.user.update({
+    return orm.user.update({
       where: { id },
       data: { lastLoginAt: new Date() },
       select: userSelect,
