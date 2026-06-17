@@ -40,11 +40,17 @@ Node.js, Express, TypeScript, PostgreSQL, TypeORM, JWT, and Zod backend foundati
 
 - `npm run dev` starts the TypeScript development server with watch mode.
 - `npm run build` compiles TypeScript into `dist`.
-- `npm run start` runs the compiled server.
+- `npm run start` runs the root `server.js` launcher, which imports `dist/server.js`.
 - `npm run typecheck` checks TypeScript without emitting files.
 - `npm run db:schema:sync` synchronizes the TypeORM entity schema for a fresh development database.
 
 ## API
+
+## cPanel Startup
+
+Use `server.js` as the Node application startup file. The actual compiled backend entrypoint remains `dist/server.js`, but the root `server.js` launcher is ESM-compatible for this package.
+
+Do not use a cPanel-generated `server.js` that starts with `var http = require('http')`; that will fail because this project uses `"type": "module"`.
 
 - `GET /api/health` returns service health information.
 - `GET /api/v1/health` returns API v1 health information.

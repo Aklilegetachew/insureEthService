@@ -2,7 +2,7 @@
   "name": "insurance-platform-backend",
   "version": "1.0.0",
   "description": "Node.js Express TypeScript backend for insurance platform",
-  "main": "dist/server.js",
+  "main": "server.js",
   "type": "module",
   "imports": {
     "#database": "./dist/config/database.js"
@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "node server.js",
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"src/**/*.ts\"",
     "lint:fix": "eslint \"src/**/*.ts\" --fix",
