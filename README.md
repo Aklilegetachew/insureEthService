@@ -44,6 +44,7 @@ Node.js, Express, TypeScript, PostgreSQL, TypeORM, JWT, and Zod backend foundati
 - `npm run start` runs the root `server.js` launcher, which imports `dist/server.js`.
 - `npm run typecheck` checks TypeScript without emitting files.
 - `npm run db:schema:sync` synchronizes the compiled TypeORM entity schema for a fresh database.
+- `npm run db:create-super-admin` creates the first `SUPER_ADMIN` from environment variables.
 
 ## API
 

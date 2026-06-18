@@ -17,7 +17,8 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "test": "jest",
     "test:watch": "jest --watch",
-    "db:schema:sync": "node dist/database/schema-sync.js"
+    "db:schema:sync": "node dist/database/schema-sync.js",
+    "db:create-super-admin": "node dist/database/create-super-admin.js"
   },
   "keywords": [
     "insurance",
