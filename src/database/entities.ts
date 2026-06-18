@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import {
   Column,
   CreateDateColumn,
@@ -7,7 +9,7 @@ import {
   ManyToOne,
   OneToMany,
   OneToOne,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
@@ -26,8 +28,8 @@ import {
 
 @Entity({ name: 'User' })
 export class User {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
+  @PrimaryColumn('uuid')
+  id: string = randomUUID();
 
   @Column()
   fullName!: string;
@@ -81,8 +83,8 @@ export class User {
 
 @Entity({ name: 'CustomerProfile' })
 export class CustomerProfile {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
+  @PrimaryColumn('uuid')
+  id: string = randomUUID();
 
   @Index({ unique: true })
   @Column({ unique: true })
@@ -111,8 +113,8 @@ export class CustomerProfile {
 @Entity({ name: 'Document' })
 @Index(['ownerType', 'ownerId'])
 export class Document {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
+  @PrimaryColumn('uuid')
+  id: string = randomUUID();
 
   @Column({ type: 'enum', enum: DocumentOwnerType, enumName: 'DocumentOwnerType' })
   ownerType!: DocumentOwnerType;
@@ -162,8 +164,8 @@ export class Document {
 
 @Entity({ name: 'InsuranceProduct' })
 export class InsuranceProduct {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
+  @PrimaryColumn('uuid')
+  id: string = randomUUID();
 
   @Column()
   name!: string;
@@ -213,8 +215,8 @@ export class InsuranceProduct {
 
 @Entity({ name: 'Quotation' })
 export class Quotation {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
+  @PrimaryColumn('uuid')
+  id: string = randomUUID();
 
   @Index()
   @Column({ unique: true })
@@ -270,8 +272,8 @@ export class Quotation {
 
 @Entity({ name: 'Policy' })
 export class Policy {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
+  @PrimaryColumn('uuid')
+  id: string = randomUUID();
 
   @Index()
   @Column({ unique: true })
@@ -334,8 +336,8 @@ export class Policy {
 
 @Entity({ name: 'Claim' })
 export class Claim {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
+  @PrimaryColumn('uuid')
+  id: string = randomUUID();
 
   @Index()
   @Column({ unique: true })
@@ -394,8 +396,8 @@ export class Claim {
 
 @Entity({ name: 'Payment' })
 export class Payment {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
+  @PrimaryColumn('uuid')
+  id: string = randomUUID();
 
   @Index()
   @Column({ unique: true })
