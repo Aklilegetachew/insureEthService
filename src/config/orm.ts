@@ -52,14 +52,38 @@ const modelTargets: Record<ModelName, EntityTarget<object>> = {
 };
 
 const modelRelations: Record<ModelName, string[]> = {
-  user: ['customerProfile'],
+  user: ['customerProfile', 'quotations', 'policies', 'payments', 'claims', 'documents'],
   customerProfile: ['user'],
   document: ['uploadedBy'],
-  insuranceProduct: [],
+  insuranceProduct: ['quotations', 'policies'],
   quotation: ['customer', 'product', 'policy'],
-  policy: ['customer', 'product', 'quotation'],
+  policy: ['customer', 'product', 'quotation', 'payments', 'claims'],
   claim: ['customer', 'policy'],
   payment: ['customer', 'policy'],
+};
+
+const relationTargets: Partial<Record<ModelName, Partial<Record<string, ModelName>>>> = {
+  user: {
+    customerProfile: 'customerProfile',
+    quotations: 'quotation',
+    policies: 'policy',
+    payments: 'payment',
+    claims: 'claim',
+    documents: 'document',
+  },
+  customerProfile: { user: 'user' },
+  document: { uploadedBy: 'user' },
+  insuranceProduct: { quotations: 'quotation', policies: 'policy' },
+  quotation: { customer: 'user', product: 'insuranceProduct', policy: 'policy' },
+  policy: {
+    customer: 'user',
+    product: 'insuranceProduct',
+    quotation: 'quotation',
+    payments: 'payment',
+    claims: 'claim',
+  },
+  claim: { customer: 'user', policy: 'policy' },
+  payment: { customer: 'user', policy: 'policy' },
 };
 
 const uniqueKeys: Partial<Record<ModelName, string[]>> = {
@@ -165,28 +189,67 @@ const collectRelations = (
   modelName: ModelName,
   args?: Pick<QueryArgs, 'include' | 'select' | 'where'>,
 ) => {
-  const relations = new Set<string>();
-  const allowedRelations = new Set(modelRelations[modelName]);
+  const relations: Record<string, true | Record<string, unknown>> = {};
 
-  const addRelationKeys = (input?: Record<string, unknown>) => {
+  const mergeRelation = (
+    target: Record<string, true | Record<string, unknown>>,
+    key: string,
+    nested?: Record<string, true | Record<string, unknown>>,
+  ) => {
+    if (!nested || Object.keys(nested).length === 0) {
+      target[key] = target[key] && target[key] !== true ? target[key] : true;
+      return;
+    }
+
+    target[key] = {
+      ...((target[key] !== true ? target[key] : {}) as Record<string, unknown>),
+      ...nested,
+    };
+  };
+
+  const addRelationKeys = (currentModel: ModelName, input?: Record<string, unknown>) => {
     if (!input) return;
 
+    const allowedRelations = new Set(modelRelations[currentModel]);
     Object.entries(input).forEach(([key, value]) => {
       if (allowedRelations.has(key)) {
-        relations.add(key);
+        const relationModel = relationTargets[currentModel]?.[key];
+        const relationValue = isPlainObject(value)
+          ? (isPlainObject(value.select) ? value.select : value)
+          : undefined;
+        const nested =
+          relationModel && relationValue
+            ? collectRelations(relationModel, {
+                include: relationValue,
+                select: relationValue,
+                where: relationValue,
+              }) as Record<string, true | Record<string, unknown>>
+            : undefined;
+
+        mergeRelation(relations, key, nested);
       }
 
       if (key === 'OR' || key === 'AND') {
-        (value as Record<string, unknown>[] | undefined)?.forEach((item) => addRelationKeys(item));
+        (value as Record<string, unknown>[] | undefined)?.forEach((item) =>
+          addRelationKeys(currentModel, item),
+        );
+      }
+
+      if (key === '_count' && isPlainObject(value) && isPlainObject(value.select)) {
+        Object.keys(value.select).forEach((relation) => {
+          if (allowedRelations.has(relation)) {
+            mergeRelation(relations, relation);
+          }
+        });
       }
     });
   };
 
-  addRelationKeys(args?.include);
-  addRelationKeys(args?.select);
-  addRelationKeys(args?.where);
+  addRelationKeys(modelName, args?.include);
+  addRelationKeys(modelName, args?.select);
+  addRelationKeys(modelName, args?.where);
 
-  return Array.from(relations);
+  return relations;
 };
 
 const applySelect = (row: unknown, select?: Record<string, unknown>, include?: Record<string, unknown>): unknown => {
@@ -205,6 +268,16 @@ const applySelect = (row: unknown, select?: Record<string, unknown>, include?: R
 
   const output: Record<string, unknown> = {};
   Object.entries(select ?? {}).forEach(([key, value]) => {
+    if (key === '_count' && isPlainObject(value) && isPlainObject(value.select)) {
+      output._count = Object.fromEntries(
+        Object.keys(value.select).map((relation) => {
+          const relationValue = row[relation];
+          return [relation, Array.isArray(relationValue) ? relationValue.length : 0];
+        }),
+      );
+      return;
+    }
+
     if (value === true) {
       output[key] = row[key];
       return;
@@ -263,8 +336,9 @@ class TypeOrmModel {
 
   async findMany(args: QueryArgs = {}): Promise<any[]> {
     await initializeDatabase();
+    const relations = collectRelations(this.modelName, args);
     const findOptions = {
-      relations: collectRelations(this.modelName, args),
+      ...(Object.keys(relations).length > 0 ? { relations } : {}),
       ...(args.orderBy ? { order: toOrder(args.orderBy) as FindOptionsOrder<object> } : {}),
     };
     const rows = await this.repository.find(findOptions as Parameters<typeof this.repository.find>[0]);
@@ -316,9 +390,16 @@ class TypeOrmModel {
       const values = JSON.parse(key) as unknown[];
       const group = Object.fromEntries(by.map((field, index) => [field, values[index]]));
       const firstCountKey = Object.keys(args._count ?? {})[0];
+      const sums = Object.fromEntries(
+        Object.keys(args._sum ?? {}).map((sumKey) => [
+          sumKey,
+          groupRows.reduce((total, row) => total + Number(row[sumKey] ?? 0), 0),
+        ]),
+      );
       return {
         ...group,
         _count: firstCountKey ? { [firstCountKey]: groupRows.length } : undefined,
+        _sum: Object.keys(sums).length > 0 ? sums : undefined,
       };
     });
   }
@@ -363,12 +444,17 @@ class TypeOrmModel {
 
   async delete(args: QueryArgs): Promise<any> {
     await initializeDatabase();
-    const row = await this.findUnique({ where: args.where, select: args.select, include: args.include }) as { id?: string } | null;
-    if (!row?.id) {
+    const existing = await this.findUnique({ where: args.where }) as { id?: string } | null;
+    if (!existing?.id) {
       throw new Orm.KnownRequestError('Record not found', 'P2025');
     }
 
-    await this.repository.delete({ id: row.id });
+    const row = await this.findUnique({
+      where: { id: existing.id },
+      select: args.select,
+      include: args.include,
+    });
+    await this.repository.delete({ id: existing.id });
     return row;
   }
 
