@@ -16,6 +16,7 @@ const staffRoles = [
   UserRole.ADMIN,
   UserRole.FINANCE_OFFICER,
   UserRole.MANAGER,
+  UserRole.BRANCH_MANAGER,
 ] as const;
 
 export const paymentRouter = Router();

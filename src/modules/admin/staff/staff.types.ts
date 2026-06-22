@@ -6,6 +6,7 @@ export type StaffRole =
   | 'CLAIM_OFFICER'
   | 'FINANCE_OFFICER'
   | 'MANAGER'
+  | 'BRANCH_MANAGER'
   | 'AGENT'
   | 'ASSESSOR';
 

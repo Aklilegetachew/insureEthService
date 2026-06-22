@@ -4,8 +4,16 @@ import { z } from 'zod';
 const optionalPositiveNumber = z.coerce.number().positive().optional();
 
 const customerInputSchema = z
-  .record(z.string(), z.unknown())
-  .optional();
+  .object({
+    applicant: z.object({
+      fullName: z.string().trim().min(2).max(120),
+      email: z.string().trim().email().toLowerCase(),
+      phone: z.string().trim().min(7).max(30),
+      address: z.string().trim().min(2).max(250),
+      nationalId: z.string().trim().min(2).max(80),
+    }),
+  })
+  .catchall(z.unknown());
 
 export const createQuotationSchema = z.object({
   body: z.object({
@@ -41,6 +49,9 @@ export const quotationDecisionSchema = z.object({
   body: z.object({
     adminNote: z.string().trim().max(2000).optional(),
     finalPremium: optionalPositiveNumber,
+    appointmentAt: z.string().datetime().optional(),
+    appointmentLocation: z.string().trim().min(2).max(250).optional(),
+    appointmentNote: z.string().trim().max(1000).optional(),
   }),
   params: z.object({
     id: z.string().uuid(),

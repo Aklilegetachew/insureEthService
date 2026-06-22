@@ -250,6 +250,15 @@ export class Quotation {
   adminNote!: string | null;
 
   @Column({ type: 'timestamp', nullable: true })
+  appointmentAt!: Date | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  appointmentLocation!: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  appointmentNote!: string | null;
+
+  @Column({ type: 'timestamp', nullable: true })
   validUntil!: Date | null;
 
   @CreateDateColumn()
@@ -449,4 +458,25 @@ export class Payment {
   @ManyToOne(() => Policy, (policy) => policy.payments, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'policyId' })
   policy!: Policy;
+}
+
+@Entity({ name: 'RolePermission' })
+@Index(['role', 'permission'], { unique: true })
+export class RolePermission {
+  @PrimaryColumn('uuid')
+  id: string = randomUUID();
+
+  @Index()
+  @Column({ type: 'enum', enum: UserRole, enumName: 'UserRole' })
+  role!: UserRole;
+
+  @Index()
+  @Column()
+  permission!: string;
+
+  @CreateDateColumn()
+  createdAt!: Date;
+
+  @UpdateDateColumn()
+  updatedAt!: Date;
 }

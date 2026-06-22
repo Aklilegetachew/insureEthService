@@ -11,6 +11,7 @@ import {
   Payment,
   Policy,
   Quotation,
+  RolePermission,
   User,
 } from '../database/entities.js';
 export * from '../database/enums.js';
@@ -58,7 +59,7 @@ export type UserModel = User;
 export const dataSource = new DataSource({
   type: 'postgres',
   url: env.DATABASE_URL,
-  entities: [User, CustomerProfile, Document, InsuranceProduct, Quotation, Policy, Claim, Payment],
+  entities: [User, CustomerProfile, Document, InsuranceProduct, Quotation, Policy, Claim, Payment, RolePermission],
   synchronize: false,
   logging: env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
 });

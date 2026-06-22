@@ -3,13 +3,16 @@ import type { Orm, QuotationStatus } from '#database';
 export type CreateQuotationInput = {
   productId: string;
   requestedCoverageAmount: number;
-  customerInput?: Orm.InputJsonValue;
+  customerInput: Orm.InputJsonValue;
   validUntil?: string;
 };
 
 export type QuotationDecisionInput = {
   adminNote?: string;
   finalPremium?: number;
+  appointmentAt?: string;
+  appointmentLocation?: string;
+  appointmentNote?: string;
 };
 
 export type QuotationQuery = {

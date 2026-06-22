@@ -9,7 +9,7 @@ import { reportQuerySchema } from './reports.validation.js';
 
 export const adminReportsRouter = Router();
 
-adminReportsRouter.use(authenticate, authorizeRoles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MANAGER));
+adminReportsRouter.use(authenticate, authorizeRoles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MANAGER, UserRole.BRANCH_MANAGER));
 adminReportsRouter.get('/summary', validate(reportQuerySchema), reportsController.summary);
 adminReportsRouter.get('/policies', validate(reportQuerySchema), reportsController.policies);
 adminReportsRouter.get('/claims', validate(reportQuerySchema), reportsController.claims);

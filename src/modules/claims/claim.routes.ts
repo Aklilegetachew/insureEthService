@@ -19,6 +19,7 @@ const staffRoles = [
   UserRole.ADMIN,
   UserRole.CLAIM_OFFICER,
   UserRole.MANAGER,
+  UserRole.BRANCH_MANAGER,
   UserRole.ASSESSOR,
 ] as const;
 

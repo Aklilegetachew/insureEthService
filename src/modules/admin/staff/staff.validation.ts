@@ -7,6 +7,7 @@ const staffRoles = [
   UserRole.CLAIM_OFFICER,
   UserRole.FINANCE_OFFICER,
   UserRole.MANAGER,
+  UserRole.BRANCH_MANAGER,
   UserRole.AGENT,
   UserRole.ASSESSOR,
 ] as const;

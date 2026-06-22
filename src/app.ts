@@ -34,6 +34,7 @@ import {
   quotationRouter,
 } from './modules/quotations/quotation.routes.js';
 import { ApiResponse } from './utils/api-response.js';
+import { accessControlRouter } from './modules/access-control/access-control.routes.js';
 
 const app = express();
 
@@ -65,6 +66,7 @@ app.get('/api/health', (_req, res) => {
 const apiV1Router = express.Router();
 
 apiV1Router.use('/auth', authRouter);
+apiV1Router.use('/access-control', accessControlRouter);
 apiV1Router.use('/admin/staff', adminStaffRouter);
 apiV1Router.use('/admin/customers', adminCustomerRouter);
 apiV1Router.use('/products', productRouter);

@@ -9,7 +9,7 @@ import { customerIdSchema, listCustomersSchema } from './customer.validation.js'
 
 export const adminCustomerRouter = Router();
 
-adminCustomerRouter.use(authenticate, authorizeRoles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MANAGER));
+adminCustomerRouter.use(authenticate, authorizeRoles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MANAGER, UserRole.BRANCH_MANAGER));
 adminCustomerRouter.get('/', validate(listCustomersSchema), customerController.listCustomers);
 adminCustomerRouter.get('/:id', validate(customerIdSchema), customerController.getCustomer);
 

@@ -1,4 +1,4 @@
-import { ClaimStatus, PaymentStatus, PolicyStatus, Orm } from '#database';
+import { ClaimStatus, PaymentStatus, PolicyStatus, QuotationStatus, Orm } from '#database';
 import dayjs from 'dayjs';
 
 import { orm } from '../../../config/orm.js';
@@ -145,7 +145,13 @@ export const reportsService = {
       orm.quotation.count({
         where: {
           ...quotationWhere,
-          status: 'SUBMITTED',
+          status: {
+            in: [
+              QuotationStatus.SUBMITTED,
+              QuotationStatus.FINANCE_APPROVED,
+              QuotationStatus.MANAGER_APPROVED,
+            ],
+          },
         },
       }),
       orm.document.count({

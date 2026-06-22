@@ -18,6 +18,7 @@ const staffRoles = [
   UserRole.SUPER_ADMIN,
   UserRole.ADMIN,
   UserRole.MANAGER,
+  UserRole.BRANCH_MANAGER,
   UserRole.AGENT,
   UserRole.CLAIM_OFFICER,
   UserRole.ASSESSOR,
