@@ -97,7 +97,7 @@ export const defaultRoleAccess: RoleAccessConfig = {
     'notifications.view',
   ],
   [UserRole.CLAIM_OFFICER]: ['dashboard.view', 'claims.view', 'claims.review', 'documents.view', 'documents.review', 'notifications.view'],
-  [UserRole.FINANCE_OFFICER]: ['dashboard.view', 'quotations.view', 'quotations.review', 'quotations.finance_review', 'payments.view', 'payments.verify', 'policies.view', 'policies.manage', 'reports.view', 'notifications.view'],
+  [UserRole.FINANCE_OFFICER]: ['dashboard.view', 'quotations.view', 'quotations.review', 'quotations.finance_review', 'payments.view', 'payments.verify', 'policies.view', 'policies.manage', 'documents.view', 'reports.view', 'notifications.view'],
   [UserRole.AGENT]: ['dashboard.view', 'customers.view', 'products.view', 'quotations.view', 'policies.view', 'notifications.view'],
   [UserRole.ASSESSOR]: ['dashboard.view', 'claims.view', 'claims.review', 'documents.view', 'notifications.view'],
 };

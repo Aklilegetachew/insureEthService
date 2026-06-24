@@ -1,8 +1,7 @@
-import { UserRole } from '#database';
 import { Router } from 'express';
 
 import { authenticate } from '../../middlewares/auth.middleware.js';
-import { authorizeRoles } from '../../middlewares/role.middleware.js';
+import { authorizePermission } from '../../middlewares/role.middleware.js';
 import { validate } from '../../middlewares/validate.middleware.js';
 import { documentController } from './document.controller.js';
 import { documentUpload } from './document.upload.js';
@@ -13,17 +12,6 @@ import {
   ownerDocumentsSchema,
   uploadDocumentBodySchema,
 } from './document.validation.js';
-
-const staffRoles = [
-  UserRole.SUPER_ADMIN,
-  UserRole.ADMIN,
-  UserRole.MANAGER,
-  UserRole.BRANCH_MANAGER,
-  UserRole.AGENT,
-  UserRole.CLAIM_OFFICER,
-  UserRole.ASSESSOR,
-  UserRole.FINANCE_OFFICER,
-] as const;
 
 export const documentRouter = Router();
 
@@ -43,15 +31,17 @@ documentRouter.get('/:id', validate(documentIdSchema), documentController.getDoc
 
 export const adminDocumentRouter = Router();
 
-adminDocumentRouter.use(authenticate, authorizeRoles(...staffRoles));
-adminDocumentRouter.get('/', validate(listAdminDocumentsSchema), documentController.listAdminDocuments);
+adminDocumentRouter.use(authenticate);
+adminDocumentRouter.get('/', authorizePermission('documents.view'), validate(listAdminDocumentsSchema), documentController.listAdminDocuments);
 adminDocumentRouter.patch(
   '/:id/approve',
+  authorizePermission('documents.review'),
   validate(documentReviewSchema),
   documentController.approveDocument,
 );
 adminDocumentRouter.patch(
   '/:id/reject',
+  authorizePermission('documents.review'),
   validate(documentReviewSchema),
   documentController.rejectDocument,
 );

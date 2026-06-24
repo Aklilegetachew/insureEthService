@@ -2,11 +2,22 @@ import { DocumentOwnerType, Orm, UserRole, type DocumentStatus } from '#database
 
 import { orm } from '../../config/orm.js';
 import { AppError } from '../../utils/app-error.js';
+import { accessControlService } from '../access-control/access-control.service.js';
+import type { PermissionKey } from '../access-control/access-control.types.js';
 import type { SafeUser } from '../auth/auth.types.js';
 import { documentRepository } from './document.repository.js';
 import type { CreateDocumentInput, DocumentReviewInput } from './document.types.js';
 
 const isStaff = (user: SafeUser) => user.role !== UserRole.CUSTOMER;
+
+const assertStaffPermission = async (user: SafeUser, permission: PermissionKey) => {
+  if (!isStaff(user)) return;
+
+  const allowed = await accessControlService.roleHasPermission(user.role, permission);
+  if (!allowed) {
+    throw new AppError('You do not have permission to access this document resource', 403);
+  }
+};
 
 const handleormError = (error: unknown): never => {
   if (error instanceof Orm.KnownRequestError) {
@@ -48,7 +59,10 @@ const assertCanAccessOwner = async (
   ownerType: DocumentOwnerType,
   ownerId: string,
 ) => {
-  if (isStaff(user)) return;
+  if (isStaff(user)) {
+    await assertStaffPermission(user, 'documents.view');
+    return;
+  }
 
   const ownerCustomerId = await getOwnerCustomerId(ownerType, ownerId);
 
@@ -163,6 +177,7 @@ export const documentService = {
     if (!isStaff(user)) {
       throw new AppError('You do not have permission to access this resource', 403);
     }
+    await assertStaffPermission(user, 'documents.review');
 
     try {
       return await documentRepository.approve(documentId, input);
@@ -175,6 +190,7 @@ export const documentService = {
     if (!isStaff(user)) {
       throw new AppError('You do not have permission to access this resource', 403);
     }
+    await assertStaffPermission(user, 'documents.review');
 
     try {
       return await documentRepository.reject(documentId, input);
@@ -192,6 +208,7 @@ export const documentService = {
     if (!isStaff(user)) {
       throw new AppError('You do not have permission to access this resource', 403);
     }
+    await assertStaffPermission(user, 'documents.view');
 
     const documents = await documentRepository.findAdminMany(filters);
     const ownerLabels = await Promise.all(documents.map((document) => resolveOwnerLabel(document)));
