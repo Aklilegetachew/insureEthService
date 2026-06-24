@@ -1,3 +1,5 @@
+import { randomInt } from 'node:crypto';
+
 import { Orm, PolicyStatus, ProductStatus, QuotationStatus } from '#database';
 
 import { orm } from '../../config/orm.js';
@@ -32,8 +34,8 @@ const quotationInclude = {
   },
 } as const;
 
-const formatQuotationNumber = (year: number, sequence: number) =>
-  `QUO-${year}-${sequence.toString().padStart(6, '0')}`;
+const formatQuotationNumber = (year: number) =>
+  `QUO-${year}-${randomInt(100000, 1000000)}`;
 
 const formatPolicyNumber = (year: number, sequence: number) =>
   `POL-${year}-${sequence.toString().padStart(6, '0')}`;
@@ -66,33 +68,34 @@ export const quotationRepository = {
   ) {
     const now = new Date();
     const year = now.getUTCFullYear();
-    const yearStart = new Date(Date.UTC(year, 0, 1));
-    const nextYearStart = new Date(Date.UTC(year + 1, 0, 1));
 
     return orm.$transaction(async (tx) => {
-      const sequence = await tx.quotation.count({
-        where: {
-          createdAt: {
-            gte: yearStart,
-            lt: nextYearStart,
-          },
-        },
-      });
+      for (let attempt = 1; attempt <= 10; attempt += 1) {
+        try {
+          return await tx.quotation.create({
+            data: {
+              quotationNumber: formatQuotationNumber(year),
+              customerId,
+              productId: input.productId,
+              status: QuotationStatus.SUBMITTED,
+              requestedCoverageAmount: new Orm.Decimal(input.requestedCoverageAmount),
+              calculatedPremium: new Orm.Decimal(calculatedPremium),
+              finalPremium: new Orm.Decimal(calculatedPremium),
+              customerInput: input.customerInput,
+              ...(input.validUntil ? { validUntil: new Date(input.validUntil) } : {}),
+            },
+            include: quotationInclude,
+          });
+        } catch (error) {
+          if (error instanceof Orm.KnownRequestError && error.code === 'P2002') {
+            continue;
+          }
 
-      return tx.quotation.create({
-        data: {
-          quotationNumber: formatQuotationNumber(year, sequence + 1),
-          customerId,
-          productId: input.productId,
-          status: QuotationStatus.SUBMITTED,
-          requestedCoverageAmount: new Orm.Decimal(input.requestedCoverageAmount),
-          calculatedPremium: new Orm.Decimal(calculatedPremium),
-          finalPremium: new Orm.Decimal(calculatedPremium),
-          customerInput: input.customerInput,
-          ...(input.validUntil ? { validUntil: new Date(input.validUntil) } : {}),
-        },
-        include: quotationInclude,
-      });
+          throw error;
+        }
+      }
+
+      throw new Orm.KnownRequestError('Quotation number already exists, please retry', 'P2002');
     });
   },
 
